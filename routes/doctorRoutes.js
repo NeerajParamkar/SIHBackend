@@ -14,7 +14,8 @@ import {
   createRoom,
   addPatient,
   getPatients,
-  uploadReport
+  uploadReport,
+  getCalendar
 } from "../controllers/doctorController.js";
 import { getDoctorIdFromParams, getDoctorAndPatientFromParams } from "../middleware/doctorMiddleware.js";
 // import { createRoom } from "../controllers/roomController.js";
@@ -51,4 +52,6 @@ router.get("/patients/:doctorId", getPatients);
 
 // Upload a report
 router.post("/upload-report", uploadReport);
+
+router.get("/:doctorId/calendar", getCalendar);
 export default router;

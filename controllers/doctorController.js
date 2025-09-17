@@ -2,10 +2,11 @@ import Doctor from "../models/doctor.js";
 import Patient from "../models/patient.js";
 import Emergency from "../models/Emergency.js";
 import Report from "../models/Report.js";
-/**
- * 📌 Add a new Doctor
- * Route: POST /api/doctors
- */
+import LabReport from "../models/labReport.js";
+import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
+import CallRoom from "../models/CallRoom.js";
+
 const addDoctor = async (req, res) => {
   try {
     const { name, mobile, specialization, availability, status } = req.body;
@@ -44,10 +45,6 @@ const addDoctor = async (req, res) => {
   }
 };
 
-/**
- * Add Report to Specific Patient under Doctor
- * Uses middleware that validates both doctorId and patientId
- */
 const addReportToPatient = async (req, res) => {
   try {
     const { doctorId, patientId } = req.params;
@@ -62,12 +59,13 @@ const addReportToPatient = async (req, res) => {
     // Build file URLs array
     const files = req.files ? req.files.map(file => `http://localhost:5000/uploads/${file.filename}`) : [];
 
-    const report = new Report({
+    const report = new LabReport({
       title,
       content,
       doctor: doctorId,
       patient: patientId,
       uploadedBy: doctorId,
+      uploadedByRole: "Doctor",
       files,
     });
 
@@ -83,8 +81,6 @@ const addReportToPatient = async (req, res) => {
   }
 };
 
-// ... existing code ...
-
 const getDoctorDetails = async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.doctorId)
@@ -92,8 +88,8 @@ const getDoctorDetails = async (req, res) => {
         path: "patients",
         populate: {
           path: "reports",
-          model: "Report",
-          select: "title content files uploadedBy createdAt updatedAt"
+          model: "LabReport",  // Changed from "Report" to "LabReport"
+          select: "title content files uploadedBy uploadedByRole createdAt updatedAt"
         }
       });
 
@@ -213,11 +209,258 @@ const attendEmergency = async (req, res) => {
   }
 };
 
+
+export const upsertCalendarSlot = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { date, time, status, patientId } = req.body;
+
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) return res.status(404).json({ message: "Doctor not found" });
+
+    // Check if the date exists
+    let calendarDay = doctor.calendar.find(
+      (entry) => entry.date.toDateString() === new Date(date).toDateString()
+    );
+
+    if (!calendarDay) {
+      // If date does not exist, create a new entry
+      calendarDay = {
+        date: new Date(date),
+        slots: [
+          {
+            time,
+            status: status || "free",
+            patient: patientId ? new mongoose.Types.ObjectId(patientId) : null,
+          },
+        ],
+      };
+      console.log("Creating new calendar day");
+      doctor.calendar.push(calendarDay);
+    } else {
+      console.log("Creating new calendar eday");
+
+      // Date exists → check if slot exists
+      let slot = calendarDay.slots.find((s) => s.time === time);
+
+      if (!slot) {
+        // Add new slot
+        calendarDay.slots.push({
+          time,
+          status: status || "free",
+          patient: patientId ? new mongoose.Types.ObjectId(patientId) : null,
+        });
+      } else {
+        // Update existing slot
+        slot.status = status || slot.status;
+        slot.patient = patientId ? new mongoose.Types.ObjectId(patientId) : slot.patient;
+      }
+    }
+
+    await doctor.save();
+
+    res.status(200).json({
+      message: "Calendar updated successfully",
+      calendar: doctor.calendar,
+    });
+  } catch (error) {
+    console.error("Error updating calendar:", error);
+    res.status(500).json({ message: "Server error" });
+      console.log("Creating new calendar day1");
+
+  }
+};
+
+export const addEmergency = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { patientId, title, details, priority } = req.body;
+
+    const emergency = new Emergency({
+      patient: patientId,
+      doctor: doctorId,
+      title,
+      details,
+      priority,
+    });
+
+    await emergency.save();
+
+    // Link this emergency to doctor
+    await Doctor.findByIdAndUpdate(doctorId, {
+      $push: { emergencies: emergency._id },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Emergency created successfully",
+      emergency,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get all emergencies for a doctor
+export const getDoctorEmergencies = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const emergencies = await Emergency.find({ doctor: doctorId })
+      .populate("patient", "name age gender contact")
+      .sort({ createdAt: -1 });
+
+    res.json({ success: true, emergencies });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Update emergency note or priority
+export const updateEmergency = async (req, res) => {
+  try {
+    const { emergencyId } = req.params;
+    const { doctorNote, priority } = req.body;
+
+    const emergency = await Emergency.findByIdAndUpdate(
+      emergencyId,
+      { doctorNote, priority },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Emergency updated successfully",
+      emergency,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Acknowledge emergency
+export const acknowledgeEmergency = async (req, res) => {
+  try {
+    const { emergencyId } = req.params;
+
+    const emergency = await Emergency.findByIdAndUpdate(
+      emergencyId,
+      { acknowledged: true },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Emergency acknowledged",
+      emergency,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+const createRoom = async (req, res) => {
+  try {
+    const { doctorId, patientId } = req.body;
+
+    if (!doctorId || !patientId) {
+      return res.status(400).json({ message: "doctorId and patientId are required" });
+    }
+
+    const roomId = uuidv4();
+
+    const room = new CallRoom({
+      roomId,
+      doctorId,
+      patientId,
+    });
+
+    await room.save();
+
+    res.status(201).json({
+      message: "Room created successfully",
+      roomId: room.roomId,
+      doctorId: room.doctorId,
+      patientId: room.patientId,
+    });
+  } catch (error) {
+    console.error("Error creating room:", error);
+    res.status(500).json({ message: "Server error while creating room" });
+  }
+};
+
+export const addPatient = async (req, res) => {
+  try {
+    const { name, age, gender, contact, history, doctorId } = req.body;
+
+    const patient = new Patient({
+      name,
+      age,
+      gender,
+      contact,
+      history,
+      doctor: doctorId
+    });
+
+    await patient.save();
+    res.status(201).json({ message: "Patient added successfully", patient });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ Get all patients of a doctor
+export const getPatients = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const patients = await Patient.find({ doctor: doctorId })
+      .populate({
+        path: "reports",
+        model: "LabReport",  // Changed from generic "reports" to specific "LabReport"
+        select: "title content files uploadedBy uploadedByRole createdAt updatedAt"
+      });
+
+    res.status(200).json({ patients });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ✅ Upload report (doctor OR lab doctor)
+export const uploadReport = async (req, res) => {
+  try {
+    const { title, content, doctorId, patientId, uploadedBy, uploadedByRole, files } = req.body;
+
+    if (!["Doctor", "LabDoctor"].includes(uploadedByRole)) {
+      return res.status(400).json({ message: "uploadedByRole must be Doctor or LabDoctor" });
+    }
+
+    const report = new LabReport({
+      title,
+      content,    // main doctor
+      patient: patientId,
+      uploadedBy,           // Doctor ID or LabDoctor ID
+      uploadedByRole,       // tells mongoose which model it is
+      files
+    });
+
+    await report.save();
+
+    // push report into patient's record
+    await Patient.findByIdAndUpdate(patientId, { $push: { reports: report._id } });
+
+    res.status(201).json({ message: "Report uploaded successfully", report });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export {
   addDoctor,
   getDoctorDetails,
   addPatientToDoctor,
   addDoctorSchedule,
   attendEmergency,
-  addReportToPatient 
+  addReportToPatient, 
+  createRoom
 };

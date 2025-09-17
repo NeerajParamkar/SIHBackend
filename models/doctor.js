@@ -39,7 +39,7 @@ const doctorSchema = new mongoose.Schema(
     reports: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Report",
+        ref: "LabReport",  // Changed from "Report" to "LabReport"
       },
     ],
 

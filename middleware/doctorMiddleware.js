@@ -2,10 +2,6 @@ import mongoose from 'mongoose';
 import Doctor from '../models/doctor.js';
 import Patient from '../models/patient.js';
 
-/**
- * Middleware to extract and validate doctor ID and patient ID from request parameters
- * Adds doctorId, doctor, patientId, and patient to req object for use in subsequent middleware/controllers
- */
 const getDoctorAndPatientFromParams = async (req, res, next) => {
   try {
     const { doctorId, patientId } = req.params;

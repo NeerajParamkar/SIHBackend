@@ -2,6 +2,14 @@
   "name": "doctorbackend",
   "version": "1.0.0",
   "description": "",
+  "homepage": "https://github.com/NeerajParamkar/SIHBackend#readme",
+  "bugs": {
+    "url": "https://github.com/NeerajParamkar/SIHBackend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeerajParamkar/SIHBackend.git"
+  },
   "license": "ISC",
   "author": "",
   "type": "module",
@@ -18,6 +26,10 @@
     "mongoose": "^8.18.1",
     "multer": "^2.0.2",
     "path": "^0.12.7",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
   }
 }

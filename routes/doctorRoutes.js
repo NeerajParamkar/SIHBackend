@@ -17,6 +17,7 @@ import {
   uploadReport,
   getCalendar
 } from "../controllers/doctorController.js";
+import { createDailyRoom, getDailyRoom, deleteDailyRoom } from "../controllers/dailyController.js";
 import { getDoctorIdFromParams, getDoctorAndPatientFromParams } from "../middleware/doctorMiddleware.js";
 // import { createRoom } from "../controllers/roomController.js";
 
@@ -54,4 +55,10 @@ router.get("/patients/:doctorId", getPatients);
 router.post("/upload-report", uploadReport);
 
 router.get("/:doctorId/calendar", getCalendar);
+
+// Daily.co routes
+router.post("/create-daily-room", createDailyRoom);
+router.get("/daily-room/:roomName", getDailyRoom);
+router.delete("/daily-room/:roomName", deleteDailyRoom);
+
 export default router;

@@ -142,6 +142,5 @@ Solving this issue will:
 - **Real-time Notifications:** Socket.IO and Message  
 - **Telemedicine (Video Calling):** WebRTC + Daily.co API  
 - **Offline Support:** AsyncStorage + Service Workers (sync when online)
-- 
 ---
 

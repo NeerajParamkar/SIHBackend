@@ -16,8 +16,21 @@ import connectDB from "./config/db.js";
 connectDB();
 
 import doctorRoutes from "./routes/doctorRoutes.js";
+import patientRoutes from "./routes/patientRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import staffRoutes from "./routes/staffRoutes.js";
+import appointmentRoutes from "./routes/appointmentRoutes.js";
+import emergencyRoutes from "./routes/emergencyRoutes.js"
+import offlineRequestRoute from "./routes/offlineRequestRoute.js"
 
 app.use("/api/doctors", doctorRoutes);
+app.use("/api/patients", patientRoutes);
+app.use("/", authRoutes);
+app.use("/api/staff", staffRoutes);
+app.use("/api/appointments", appointmentRoutes);
+app.use("/api/emergencies", emergencyRoutes);
+app.use("/offline-requests", offlineRequestRoute);
+
 
 app.get("/api/health", (req, res) => {
   res.status(200).json({
@@ -76,5 +89,5 @@ const PORT = process.env.PORT || 3000;
 // });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://192.168.1.18:${PORT}`);
+  console.log(`Server running on http://192.168.1.45:${PORT}`);
 });

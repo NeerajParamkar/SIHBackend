@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
-  title: { type: String, required: true }, // e.g. "Checkup with Patient X"
+  title: { type: String }, // e.g. "Checkup with Patient X"
   description: { type: String }, // optional details
   patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" }, // optional link
   type: { type: String, enum: ["appointment", "surgery", "meeting", "other"], default: "appointment" },

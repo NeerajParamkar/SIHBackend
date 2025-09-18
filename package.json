@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "description": "Backend for Doctor / Telemedicine App",
   "license": "MIT",
+  "homepage": "https://github.com/NeerajParamkar/SIHBackend#readme",
+  "bugs": {
+    "url": "https://github.com/NeerajParamkar/SIHBackend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NeerajParamkar/SIHBackend.git"
+  },
   "author": "",
   "type": "module",
   "main": "server.js",

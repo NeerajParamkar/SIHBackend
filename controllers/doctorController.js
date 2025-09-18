@@ -454,7 +454,28 @@ export const uploadReport = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// controllers/doctorController.js
+export const getCalendar = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
 
+    const doctor = await Doctor.findById(doctorId)
+      .populate("calendar.slots.patient", "name age gender") // populate patient details if needed
+      .select("calendar");
+
+    if (!doctor) {
+      return res.status(404).json({ message: "Doctor not found" });
+    }
+
+    res.status(200).json({
+      message: "Calendar fetched successfully",
+      calendar: doctor.calendar,
+    });
+  } catch (error) {
+    console.error("Error fetching calendar:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 export {
   addDoctor,
   getDoctorDetails,

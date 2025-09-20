@@ -1,4 +1,3 @@
-
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -22,13 +21,15 @@ import staffRoutes from "./routes/staffRoutes.js";
 import appointmentRoutes from "./routes/appointmentRoutes.js";
 import emergencyRoutes from "./routes/emergencyRoutes.js"
 import offlineRequestRoute from "./routes/offlineRequestRoute.js"
+import labDoctorRoutes from "./routes/labDoctorRoutes.js"
 
 app.use("/api/doctors", doctorRoutes);
 app.use("/api/patients", patientRoutes);
-app.use("/", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/emergencies", emergencyRoutes);
+app.use("/api/lab-doctors", labDoctorRoutes);
 app.use("/offline-requests", offlineRequestRoute);
 
 
@@ -84,10 +85,7 @@ io.on('connection', (socket) => {
 
 
 const PORT = process.env.PORT || 3000;
-// app.listen(PORT, () => {
-//   console.log(`🚀 Server running on port ${PORT}`);
-// });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running on http://192.168.1.45:${PORT}`);
+  console.log(`Server running on http://192.168.1.48:${PORT}`);
 });

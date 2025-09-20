@@ -1,22 +1,22 @@
 const mongoose = require("mongoose");
 
 const taskSchema = new mongoose.Schema({
-  title: { type: String }, // e.g. "Checkup with Patient X"
-  description: { type: String }, // optional details
-  patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" }, // optional link
+  title: { type: String }, 
+  description: { type: String }, 
+  patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" }, 
   type: { type: String, enum: ["appointment", "surgery", "meeting", "other"], default: "appointment" },
 });
 
 const dayScheduleSchema = new mongoose.Schema({
-  date: { type: Date, required: true }, // e.g. 2025-09-15
+  date: { type: Date, required: true },
   status: { 
     type: String, 
     enum: ["available", "busy", "onDuty", "offDuty"], 
     default: "available" 
-  }, // toggle
+  }, 
   slots: [
     {
-      hour: { type: String, required: true }, // "08:00-09:00"
+      hour: { type: String, required: true }, 
       tasks: [taskSchema] 
     }
   ],

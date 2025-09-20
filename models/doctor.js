@@ -2,10 +2,16 @@ import mongoose from "mongoose";
 
 const doctorSchema = new mongoose.Schema(
   {
-    // Basic Info
     name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
       trim: true,
     },
     mobile: {
@@ -26,8 +32,11 @@ const doctorSchema = new mongoose.Schema(
       enum: ["active", "on-leave", "busy"],
       default: "active",
     },
+    password: {
+      type: String,
+      required: true,
+    },
 
-    // Patients linked to this doctor
     patients: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -35,15 +44,13 @@ const doctorSchema = new mongoose.Schema(
       },
     ],
 
-    // Reports handled by this doctor
     reports: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "LabReport",  // Changed from "Report" to "LabReport"
+        ref: "LabReport",  
       },
     ],
 
-    // Calendar (per-day schedule with hourly slots)
     calendar: [
       {
         date: {
@@ -52,7 +59,7 @@ const doctorSchema = new mongoose.Schema(
         },
         slots: [
           {
-            time: { type: String, required: true }, // e.g. "09:00"
+            time: { type: String, required: true }, 
             status: {
               type: String,
               enum: ["free", "booked", "cancelled"],
@@ -68,7 +75,6 @@ const doctorSchema = new mongoose.Schema(
       },
     ],
 
-    // Emergencies assigned to this doctor
     emergencies: [
       {
         type: mongoose.Schema.Types.ObjectId,
@@ -77,7 +83,7 @@ const doctorSchema = new mongoose.Schema(
     ],
   },
   {
-    timestamps: true, // createdAt & updatedAt
+    timestamps: true, 
   }
 );
 

@@ -1,9 +1,9 @@
 import mongoose from "mongoose";
 
 const AppointmentSchema = new mongoose.Schema({
-  //can use .populate directly to connect patient schema instead of quering ervytime
+ 
     patient: { type: mongoose.Schema.Types.ObjectId, ref: "Patient" },
-  doctorId: String,//can be selected by patient or allocated by hospital
+  doctorId: String,
   date: Date,
   time: String,
   reason: String,

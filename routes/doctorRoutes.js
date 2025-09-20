@@ -48,15 +48,12 @@ router.post("/create-room", createRoom);
 
 router.post("/add-patient", addPatient);
 
-// Get all patients of a doctor
 router.get("/patients/:doctorId", getPatients);
 
-// Upload a report
 router.post("/upload-report", uploadReport);
 
 router.get("/:doctorId/calendar", getCalendar);
 
-// Daily.co routes
 router.post("/create-daily-room", createDailyRoom);
 router.get("/daily-room/:roomName", getDailyRoom);
 router.delete("/daily-room/:roomName", deleteDailyRoom);

@@ -6,7 +6,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
   try {
     const { doctorId, patientId } = req.params;
     
-    // Check if doctorId is provided
     if (!doctorId) {
       return res.status(400).json({
         success: false,
@@ -17,7 +16,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
       });
     }
     
-    // Validate doctorId ObjectId format
     if (!mongoose.Types.ObjectId.isValid(doctorId)) {
       return res.status(400).json({
         success: false,
@@ -28,7 +26,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
       });
     }
     
-    // Check if doctor exists
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({
@@ -40,13 +37,10 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
       });
     }
     
-    // Add doctorId and doctor to request object
     req.doctorId = doctorId;
     req.doctor = doctor;
     
-    // Handle patientId if provided
     if (patientId) {
-      // Validate patientId ObjectId format
       if (!mongoose.Types.ObjectId.isValid(patientId)) {
         return res.status(400).json({
           success: false,
@@ -57,7 +51,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
         });
       }
       
-      // Check if patient exists
       const patient = await Patient.findById(patientId);
       if (!patient) {
         return res.status(404).json({
@@ -69,7 +62,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
         });
       }
       
-      // Verify patient belongs to the doctor
       if (patient.doctor.toString() !== doctorId) {
         return res.status(403).json({
           success: false,
@@ -80,7 +72,6 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
         });
       }
       
-      // Add patientId and patient to request object
       req.patientId = patientId;
       req.patient = patient;
     }
@@ -97,16 +88,10 @@ const getDoctorAndPatientFromParams = async (req, res, next) => {
     });
   }
 };
-
-/**
- * Middleware to extract and validate only doctor ID from request parameters
- * Adds doctorId and doctor to req object for use in subsequent middleware/controllers
- */
 const getDoctorIdFromParams = async (req, res, next) => {
   try {
     const { doctorId } = req.params;
     
-    // Check if doctorId is provided
     if (!doctorId) {
       return res.status(400).json({
         success: false,
@@ -117,7 +102,6 @@ const getDoctorIdFromParams = async (req, res, next) => {
       });
     }
     
-    // Validate ObjectId format
     if (!mongoose.Types.ObjectId.isValid(doctorId)) {
       return res.status(400).json({
         success: false,
@@ -128,7 +112,6 @@ const getDoctorIdFromParams = async (req, res, next) => {
       });
     }
     
-    // Check if doctor exists
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({
@@ -140,7 +123,6 @@ const getDoctorIdFromParams = async (req, res, next) => {
       });
     }
     
-    // Add doctorId and doctor to request object
     req.doctorId = doctorId;
     req.doctor = doctor;
     

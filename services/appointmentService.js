@@ -1,17 +1,15 @@
-// services/appointmentService.js
+
 import mongoose from 'mongoose';
 import Appointment from '../models/Appointment.js';
 import SlotLock from '../models/SlotLock.js';
 import Doctor from '../models/doctor.js';
 
-/** Format HH:mm string */
 function formatTimeHHMM(time) {
   if (!time) throw new Error('Time is required for formatting');
   const [h, m] = time.split(':').map(Number);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2,'0')}`;
 }
 
-/** Generate slots (start times only) */
 export function generateSlots(startTime, endTime, minutes = 30) {
   const slots = [];
   const toMinutes = t => {
@@ -29,7 +27,6 @@ export function generateSlots(startTime, endTime, minutes = 30) {
   return slots;
 }
 
-/** Normalize date to start/end of day */
 function getDateRange(date) {
   const startOfDay = new Date(date);
   startOfDay.setHours(0,0,0,0);
@@ -38,7 +35,6 @@ function getDateRange(date) {
   return { startOfDay, endOfDay };
 }
 
-/** Get available slots for a doctor */
 export async function getAvailableSlots(doctorId, date) {
   const doctor = await Doctor.findById(doctorId);
   if (!doctor) throw new Error('Doctor not found');
@@ -57,7 +53,6 @@ export async function getAvailableSlots(doctorId, date) {
   return allSlots.filter(s => !bookedSet.has(s));
 }
 
-/** Ensure doctor is available at specific time */
 export async function ensureDoctorAvailable(doctorId, date, time) {
   const formattedTime = formatTimeHHMM(time);
   const availableSlots = await getAvailableSlots(doctorId, date);
@@ -66,7 +61,6 @@ export async function ensureDoctorAvailable(doctorId, date, time) {
   }
 }
 
-/** Atomic booking using transactions */
 export async function bookAppointmentAtomically({ patient, doctorId, date, time, appointmentType }) {
   const session = await mongoose.startSession();
   try {
@@ -103,7 +97,7 @@ export async function bookAppointmentAtomically({ patient, doctorId, date, time,
   }
 }
 
-/** Fallback booking using SlotLock */
+
 export async function tryLockAndBook({ patient, doctorId, date, time, appointmentType }) {
   const lockDate = date.toISOString().split('T')[0];
   const formattedTime = formatTimeHHMM(time);

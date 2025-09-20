@@ -8,11 +8,9 @@ const patientSchema = new mongoose.Schema(
     contact: { type: String },
     history: { type: String },
 
-    // Main doctor who treats this patient
     doctor: { type: mongoose.Schema.Types.ObjectId, ref: "Doctor", required: true },
 
-    // All reports (added by main doctor OR lab doctor)
-    reports: [{ type: mongoose.Schema.Types.ObjectId, ref: "LabReport" }]  // Changed from "Report" to "LabReport"
+    reports: [{ type: mongoose.Schema.Types.ObjectId, ref: "LabReport" }]  
   },
   { timestamps: true }
 );

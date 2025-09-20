@@ -10,8 +10,6 @@ import CallRoom from "../models/CallRoom.js";
 const addDoctor = async (req, res) => {
   try {
     const { name, mobile, specialization, availability, status } = req.body;
-
-    // Check if doctor already exists with mobile number
     const existingDoctor = await Doctor.findOne({ mobile });
     if (existingDoctor) {
       return res.status(400).json({ 
@@ -20,7 +18,6 @@ const addDoctor = async (req, res) => {
       });
     }
 
-    // Create new doctor
     const doctor = new Doctor({
       name,
       mobile,
@@ -56,8 +53,7 @@ const addReportToPatient = async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
-    // Build file URLs array
-    const files = req.files ? req.files.map(file => `http://localhost:5000/uploads/${file.filename}`) : [];
+    const files = req.files ? req.files.map(file => `${process.env.BACKEND_URL}/uploads/${file.filename}`) : [];
 
     const report = new LabReport({
       title,
@@ -71,7 +67,6 @@ const addReportToPatient = async (req, res) => {
 
     await report.save();
 
-    // Link report to patient
     patient.reports.push(report._id);
     await patient.save();
 
@@ -88,7 +83,7 @@ const getDoctorDetails = async (req, res) => {
         path: "patients",
         populate: {
           path: "reports",
-          model: "LabReport",  // Changed from "Report" to "LabReport"
+          model: "LabReport", 
           select: "title content files uploadedBy uploadedByRole createdAt updatedAt"
         }
       });
@@ -103,7 +98,6 @@ const getDoctorDetails = async (req, res) => {
 
 const addPatientToDoctor = async (req, res) => {
   try {
-    // Doctor already validated by middleware
     const doctor = req.doctor;
     const doctorId = req.doctorId;
     const { name, age, gender, contact, history } = req.body;
@@ -136,20 +130,15 @@ const addPatientToDoctor = async (req, res) => {
 
 const addDoctorSchedule = async (req, res) => {
   try {
-    // Doctor already validated by middleware
     const doctor = req.doctor;
-    const { date, slots } = req.body; // slots = [{ time: "09:00" }, { time: "10:00" }]
-
-    // Check if schedule already exists for that date
+    const { date, slots } = req.body; 
     let calendarDay = doctor.calendar.find(
       (day) => day.date.toISOString().split("T")[0] === new Date(date).toISOString().split("T")[0]
     );
 
     if (calendarDay) {
-      // Add slots to existing day
       calendarDay.slots.push(...slots.map((s) => ({ ...s, status: "free" })));
     } else {
-      // Create new day schedule
       doctor.calendar.push({
         date,
         slots: slots.map((s) => ({ ...s, status: "free" })),
@@ -174,7 +163,6 @@ const addDoctorSchedule = async (req, res) => {
 
 const attendEmergency = async (req, res) => {
   try {
-    // Doctor already validated by middleware
     const doctor = req.doctor;
     const { emergencyId } = req.params;
 
@@ -186,11 +174,9 @@ const attendEmergency = async (req, res) => {
       });
     }
 
-    // Mark emergency as resolved
     emergency.status = "resolved";
     await emergency.save();
 
-    // Ensure emergency is tracked under doctor
     if (!doctor.emergencies.includes(emergency._id)) {
       doctor.emergencies.push(emergency._id);
       await doctor.save();
@@ -218,13 +204,11 @@ export const upsertCalendarSlot = async (req, res) => {
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) return res.status(404).json({ message: "Doctor not found" });
 
-    // Check if the date exists
     let calendarDay = doctor.calendar.find(
       (entry) => entry.date.toDateString() === new Date(date).toDateString()
     );
 
     if (!calendarDay) {
-      // If date does not exist, create a new entry
       calendarDay = {
         date: new Date(date),
         slots: [
@@ -240,18 +224,15 @@ export const upsertCalendarSlot = async (req, res) => {
     } else {
       console.log("Creating new calendar eday");
 
-      // Date exists → check if slot exists
       let slot = calendarDay.slots.find((s) => s.time === time);
 
       if (!slot) {
-        // Add new slot
         calendarDay.slots.push({
           time,
           status: status || "free",
           patient: patientId ? new mongoose.Types.ObjectId(patientId) : null,
         });
       } else {
-        // Update existing slot
         slot.status = status || slot.status;
         slot.patient = patientId ? new mongoose.Types.ObjectId(patientId) : slot.patient;
       }
@@ -286,7 +267,6 @@ export const addEmergency = async (req, res) => {
 
     await emergency.save();
 
-    // Link this emergency to doctor
     await Doctor.findByIdAndUpdate(doctorId, {
       $push: { emergencies: emergency._id },
     });
@@ -301,7 +281,6 @@ export const addEmergency = async (req, res) => {
   }
 };
 
-// Get all emergencies for a doctor
 export const getDoctorEmergencies = async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -316,7 +295,6 @@ export const getDoctorEmergencies = async (req, res) => {
   }
 };
 
-// Update emergency note or priority
 export const updateEmergency = async (req, res) => {
   try {
     const { emergencyId } = req.params;
@@ -338,7 +316,6 @@ export const updateEmergency = async (req, res) => {
   }
 };
 
-// Acknowledge emergency
 export const acknowledgeEmergency = async (req, res) => {
   try {
     const { emergencyId } = req.params;
@@ -408,7 +385,6 @@ export const addPatient = async (req, res) => {
   }
 };
 
-// ✅ Get all patients of a doctor
 export const getPatients = async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -416,7 +392,7 @@ export const getPatients = async (req, res) => {
     const patients = await Patient.find({ doctor: doctorId })
       .populate({
         path: "reports",
-        model: "LabReport",  // Changed from generic "reports" to specific "LabReport"
+        model: "LabReport",  
         select: "title content files uploadedBy uploadedByRole createdAt updatedAt"
       });
 
@@ -426,7 +402,6 @@ export const getPatients = async (req, res) => {
   }
 };
 
-// ✅ Upload report (doctor OR lab doctor)
 export const uploadReport = async (req, res) => {
   try {
     const { title, content, doctorId, patientId, uploadedBy, uploadedByRole, files } = req.body;
@@ -437,16 +412,15 @@ export const uploadReport = async (req, res) => {
 
     const report = new LabReport({
       title,
-      content,    // main doctor
+      content,  
       patient: patientId,
-      uploadedBy,           // Doctor ID or LabDoctor ID
-      uploadedByRole,       // tells mongoose which model it is
+      uploadedBy,           
+      uploadedByRole,   
       files
     });
 
     await report.save();
 
-    // push report into patient's record
     await Patient.findByIdAndUpdate(patientId, { $push: { reports: report._id } });
 
     res.status(201).json({ message: "Report uploaded successfully", report });
@@ -454,13 +428,12 @@ export const uploadReport = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// controllers/doctorController.js
 export const getCalendar = async (req, res) => {
   try {
     const { doctorId } = req.params;
 
     const doctor = await Doctor.findById(doctorId)
-      .populate("calendar.slots.patient", "name age gender") // populate patient details if needed
+      .populate("calendar.slots.patient", "name age gender") 
       .select("calendar");
 
     if (!doctor) {
